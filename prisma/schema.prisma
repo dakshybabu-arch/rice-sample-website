@@ -1,0 +1,224 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Admin User Model
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String
+  image         String?
+  role          String    @default("admin")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+}
+
+// NextAuth Models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Product Model
+model Product {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  description     String   @db.Text
+  longDescription String   @db.Text
+  grainType       String
+  packaging       String[]
+  features        String[]
+  image           String
+  order           Int      @default(0)
+  published       Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Company Info Model
+model CompanyInfo {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  tagline     String?
+  subtitle    String?  @db.Text
+  description String?  @db.Text
+  story       String[] @default([])
+  mission     String?  @db.Text
+  vision      String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stats           Stat[]
+  whyChooseUs     WhyChooseUs[]
+  farmingProcess  FarmingProcess[]
+  exportCapabilities ExportCapabilities?
+  sustainability  Sustainability?
+  socialLinks     SocialLinks?
+}
+
+model Stat {
+  id          String   @id @default(cuid())
+  label       String
+  value       Int
+  suffix      String?
+  order       Int      @default(0)
+  companyInfo String
+  companyInfoCompanyInfo CompanyInfo @relation(fields: [companyInfo], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WhyChooseUs {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  icon        String
+  order       Int      @default(0)
+  companyInfo String
+  companyInfoCompanyInfo CompanyInfo @relation(fields: [companyInfo], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model FarmingProcess {
+  id          String   @id @default(cuid())
+  step        Int
+  title       String
+  description String   @db.Text
+  companyInfo String
+  companyInfoCompanyInfo CompanyInfo @relation(fields: [companyInfo], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ExportCapabilities {
+  id          String   @id @default(cuid())
+  description String   @db.Text
+  regions     String[]
+  companyInfo String   @unique
+  companyInfoCompanyInfo CompanyInfo @relation(fields: [companyInfo], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Sustainability {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  initiatives String[]
+  companyInfo String   @unique
+  companyInfoCompanyInfo CompanyInfo @relation(fields: [companyInfo], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SocialLinks {
+  id          String   @id @default(cuid())
+  facebook    String?
+  instagram   String?
+  linkedin    String?
+  twitter     String?
+  youtube     String?
+  companyInfo String   @unique
+  companyInfoCompanyInfo CompanyInfo @relation(fields: [companyInfo], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Certification Model
+model Certification {
+  id          String   @id @default(cuid())
+  name        String
+  shortName   String
+  description String   @db.Text
+  issueDate   String
+  icon        String
+  color       String
+  order       Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Contact Info Model
+model ContactInfo {
+  id          String   @id @default(cuid())
+  line1       String
+  line2       String
+  city        String
+  state       String
+  pincode     String
+  country     String
+  primaryPhone String
+  secondaryPhone String?
+  generalEmail String
+  salesEmail  String?
+  exportsEmail String?
+  whatsappNumber String
+  whatsappMessage String @db.Text
+  weekdaysHours String
+  saturdayHours String
+  sundayHours String
+  mapEmbedUrl String @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Media Model for image uploads
+model Media {
+  id          String   @id @default(cuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int
+  url         String
+  alt         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
